@@ -34,3 +34,6 @@ build/
 
 ### Mac ###
 .DS_Store
+
+### keine Passwörter
+application-prod.properties
