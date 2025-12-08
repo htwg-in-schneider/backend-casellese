@@ -37,3 +37,4 @@ build/
 
 ### keine Passwörter
 application-prod.properties
+application-local.properties
