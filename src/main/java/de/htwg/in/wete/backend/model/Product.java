@@ -9,8 +9,8 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.OneToMany;
 import java.util.List;
+import java.util.ArrayList;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
@@ -28,10 +28,11 @@ public class Product {
 
     private Double price;
     private String imageUrl;
+    private String imageUrlDetails;
+    private String ingredients;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnore
-    private List<Review> reviews;
+    private List<Recipe> recipes = new ArrayList<>();
 
     // Getters and setters
     public Long getId() {
@@ -82,22 +83,38 @@ public class Product {
         this.imageUrl = imageUrl;
     }
 
-    public List<Review> getReviews() {
-        return reviews;
+    public String getImageUrlDetails() {
+        return imageUrlDetails;
     }
 
-    public void setReviews(List<Review> reviews) {
-        this.reviews = reviews;
+    public void setImageUrlDetails(String imageUrlDetails) {
+        this.imageUrlDetails = imageUrlDetails;
     }
 
-    public void addReview(Review review) {
-        this.reviews.add(review);
-        review.setProduct(this);
+    public String getIngredients() {
+        return ingredients;
     }
 
-    public void removeReview(Review review) {
-        this.reviews.remove(review);
-        review.setProduct(null);
+    public void setIngredients(String ingredients) {
+        this.ingredients = ingredients;
+    }
+
+    public List<Recipe> getRecipes() {
+        return recipes;
+    }
+
+    public void setRecipes(List<Recipe> recipes) {
+        this.recipes = recipes;
+    }
+
+    public void addRecipe(Recipe recipe) {
+        this.recipes.add(recipe);
+        recipe.setProduct(this);
+    }
+
+    public void removeRecipe(Recipe recipe) {
+        this.recipes.remove(recipe);
+        recipe.setProduct(null);
     }
 
     @Override
@@ -122,6 +139,8 @@ public class Product {
                 ", category=" + category +
                 ", price=" + price +
                 ", imageUrl='" + imageUrl + '\'' +
+                ", imageUrlDetails='" + imageUrlDetails + '\'' +
+                ", ingredients='" + ingredients + '\'' +
                 '}';
     }
 }

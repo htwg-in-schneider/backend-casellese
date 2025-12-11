@@ -23,47 +23,47 @@ class ProductRepositoryTests {
     @Test
     void testSaveProduct() {
         Product product = new Product();
-        product.setTitle("Test Violin");
-        product.setDescription("A test violin for unit testing");
-        product.setCategory(Category.VIOLIN);
-        product.setPrice(999.99);
-        product.setImageUrl("https://example.com/violin.jpg");
+        product.setTitle("Test Caciocavallo");
+        product.setDescription("Ein Test-Käse für Unit-Tests");
+        product.setCategory(Category.KAESE);
+        product.setPrice(7.99);
+        product.setImageUrl("https://example.com/kaese.jpg");
 
         Product savedProduct = productRepository.save(product);
 
         assertNotNull(savedProduct.getId());
-        assertEquals("Test Violin", savedProduct.getTitle());
-        assertEquals(Category.VIOLIN, savedProduct.getCategory());
+        assertEquals("Test Caciocavallo", savedProduct.getTitle());
+        assertEquals(Category.KAESE, savedProduct.getCategory());
     }
 
     @Test
     void testFindById() {
         Product product = new Product();
-        product.setTitle("Find Me Cello");
-        product.setDescription("A cello to be found");
-        product.setCategory(Category.CELLO);
-        product.setPrice(2500.00);
-        product.setImageUrl("https://example.com/cello.jpg");
+        product.setTitle("Find Me Salsiccia");
+        product.setDescription("Eine Salsiccia zum Finden");
+        product.setCategory(Category.SALAMI);
+        product.setPrice(15.99);
+        product.setImageUrl("https://example.com/salami.jpg");
 
         Product savedProduct = productRepository.save(product);
 
         Optional<Product> foundProduct = productRepository.findById(savedProduct.getId());
 
         assertTrue(foundProduct.isPresent());
-        assertEquals("Find Me Cello", foundProduct.get().getTitle());
+        assertEquals("Find Me Salsiccia", foundProduct.get().getTitle());
     }
 
     @Test
     void testFindAll() {
         Product product1 = new Product();
-        product1.setTitle("Violin 1");
-        product1.setCategory(Category.VIOLIN);
-        product1.setPrice(1000.00);
+        product1.setTitle("Käse 1");
+        product1.setCategory(Category.KAESE);
+        product1.setPrice(7.99);
 
         Product product2 = new Product();
-        product2.setTitle("Double Bass 1");
-        product2.setCategory(Category.DOUBLE_BASS);
-        product2.setPrice(3000.00);
+        product2.setTitle("Brot 1");
+        product2.setCategory(Category.BROT);
+        product2.setPrice(4.99);
 
         productRepository.save(product1);
         productRepository.save(product2);
@@ -77,8 +77,8 @@ class ProductRepositoryTests {
     void testDeleteProduct() {
         Product product = new Product();
         product.setTitle("Delete Me");
-        product.setCategory(Category.ACCESSORIES);
-        product.setPrice(50.00);
+        product.setCategory(Category.BROT);
+        product.setPrice(4.99);
 
         Product savedProduct = productRepository.save(product);
         Long productId = savedProduct.getId();
@@ -93,16 +93,16 @@ class ProductRepositoryTests {
     void testUpdateProduct() {
         Product product = new Product();
         product.setTitle("Original Title");
-        product.setCategory(Category.VIOLIN);
-        product.setPrice(1000.00);
+        product.setCategory(Category.KAESE);
+        product.setPrice(7.99);
 
         Product savedProduct = productRepository.save(product);
         savedProduct.setTitle("Updated Title");
-        savedProduct.setPrice(1500.00);
+        savedProduct.setPrice(9.99);
 
         Product updatedProduct = productRepository.save(savedProduct);
 
         assertEquals("Updated Title", updatedProduct.getTitle());
-        assertEquals(1500.00, updatedProduct.getPrice());
+        assertEquals(9.99, updatedProduct.getPrice());
     }
 }
