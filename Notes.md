@@ -29,3 +29,20 @@ mvn spring-boot:run -Dspring-boot.run.profiles=prod
 - JDBC URL: jdbc:h2:file:./target/saitenweise-db;AUTO_SERVER=TRUE
 - Username: sa
 - unter http://localhost:8081/h2-console
+
+# Iteration 4: CORS Configuration
+Ohne diese Konfiguration würde der Browser Anfragen vom Frontend (z.B. http://localhost:5173) an das Backend (z.B. http://localhost:8081) blockieren, da sie von unterschiedlichen Origins kommen. Die CORS-Konfiguration erlaubt diese Cross-Origin-Anfragen.
+
+# Iteration 5: Added GitHub Actions workflow for Maven build verification
+Der GitHub Actions Workflow macht Folgendes:
+Schritt : Beschreibung 
+______________________
+Trigger : Läuft bei jedem push und pull_request
+
+Checkout: Klont das Repository
+
+JDK 21 Setup: Installiert Java 21 (Temurin Distribution) mit Maven-Caching
+
+Maven Verify: Führt mvn verify aus (kompiliert, testet, verifiziert)
+
+![alt text](image.png)
