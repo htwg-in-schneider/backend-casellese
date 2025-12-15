@@ -8,7 +8,9 @@ import org.springframework.web.bind.annotation.*;
 import de.htwg.in.wete.backend.model.Product;
 import de.htwg.in.wete.backend.repository.ProductRepository;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
 
 import java.util.List;
 import java.util.Optional;
@@ -28,15 +30,15 @@ public class ProductController {
     }
 
     @PostMapping
-    public Product createProduct(@RequestBody Product product) {
-        if (product.getId() != null) {
-            product.setId(null);
-            LOG.warn("Attempted to create a product with an existing ID. ID has been set to null to create a new product.");
-        }
-        Product newProduct = productRepository.save(product);
-        LOG.info("Created new product with id " + newProduct.getId());
-        return newProduct;
+public ResponseEntity<Product> createProduct(@RequestBody Product product) {
+    if (product.getId() != null) {
+        product.setId(null);
+        LOG.warn("Attempted to create a product with an existing ID. ID has been set to null to create a new product.");
     }
+    Product newProduct = productRepository.save(product);
+    LOG.info("Created new product with id " + newProduct.getId());
+    return ResponseEntity.status(HttpStatus.CREATED).body(newProduct);
+}
 
     @PutMapping("/{id}")
     public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody Product productDetails) {

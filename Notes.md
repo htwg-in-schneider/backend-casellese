@@ -47,3 +47,9 @@ JDK 21 Setup: Installiert Java 21 (Temurin Distribution) mit Maven-Caching
 Maven Verify: Führt mvn verify aus (kompiliert, testet, verifiziert)
 
 ![alt text](image.png)
+
+### Iteration 6: CRUD for Products (and tests)
+mvn test -Dspring.profiles.active=local , um Tests durchzuführen
+![alt text](image-2.png)
+
+### Iteration 7: Added 1:n relation Product - Review
