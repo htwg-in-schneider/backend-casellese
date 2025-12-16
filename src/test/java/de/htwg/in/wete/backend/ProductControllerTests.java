@@ -256,4 +256,109 @@ class ProductControllerTests {
         verify(productRepository, times(1)).findById(999L);
         verify(productRepository, never()).delete(any(Product.class));
     }
+
+    // ========== GET /api/product?name=... - Search by name ==========
+
+    @Test
+    void getProducts_withNameParameter_shouldSearchByName() throws Exception {
+        Product product = new Product();
+        product.setId(1L);
+        product.setTitle("Caciocavallo");
+        product.setCategory(Category.KAESE);
+        product.setPrice(12.99);
+
+        List<Product> products = Arrays.asList(product);
+        when(productRepository.findByTitleContainingIgnoreCase("Cacio")).thenReturn(products);
+
+        mockMvc.perform(get("/api/product").param("name", "Cacio"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].title", is("Caciocavallo")));
+
+        verify(productRepository, times(1)).findByTitleContainingIgnoreCase("Cacio");
+        verify(productRepository, never()).findAll();
+    }
+
+    // ========== GET /api/product?category=... - Filter by category ==========
+
+    @Test
+    void getProducts_withCategoryParameter_shouldFilterByCategory() throws Exception {
+        Product product1 = new Product();
+        product1.setId(1L);
+        product1.setTitle("Caciocavallo");
+        product1.setCategory(Category.KAESE);
+        product1.setPrice(12.99);
+
+        Product product2 = new Product();
+        product2.setId(2L);
+        product2.setTitle("Mozzarella");
+        product2.setCategory(Category.KAESE);
+        product2.setPrice(8.99);
+
+        List<Product> products = Arrays.asList(product1, product2);
+        when(productRepository.findByCategory(Category.KAESE)).thenReturn(products);
+
+        mockMvc.perform(get("/api/product").param("category", "KAESE"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].category", is("KAESE")))
+                .andExpect(jsonPath("$[1].category", is("KAESE")));
+
+        verify(productRepository, times(1)).findByCategory(Category.KAESE);
+        verify(productRepository, never()).findAll();
+    }
+
+    // ========== GET /api/product?name=...&category=... - Search and filter ==========
+
+    @Test
+    void getProducts_withNameAndCategoryParameters_shouldSearchAndFilter() throws Exception {
+        Product product = new Product();
+        product.setId(1L);
+        product.setTitle("Caciocavallo Silano");
+        product.setCategory(Category.KAESE);
+        product.setPrice(15.99);
+
+        List<Product> products = Arrays.asList(product);
+        when(productRepository.findByTitleContainingIgnoreCaseAndCategory("Cacio", Category.KAESE))
+                .thenReturn(products);
+
+        mockMvc.perform(get("/api/product")
+                        .param("name", "Cacio")
+                        .param("category", "KAESE"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].title", is("Caciocavallo Silano")))
+                .andExpect(jsonPath("$[0].category", is("KAESE")));
+
+        verify(productRepository, times(1)).findByTitleContainingIgnoreCaseAndCategory("Cacio", Category.KAESE);
+        verify(productRepository, never()).findAll();
+    }
+
+    @Test
+    void getProducts_withNoParameters_shouldReturnAllProducts() throws Exception {
+        Product product1 = new Product();
+        product1.setId(1L);
+        product1.setTitle("Käse");
+        product1.setCategory(Category.KAESE);
+
+        Product product2 = new Product();
+        product2.setId(2L);
+        product2.setTitle("Brot");
+        product2.setCategory(Category.BROT);
+
+        List<Product> products = Arrays.asList(product1, product2);
+        when(productRepository.findAll()).thenReturn(products);
+
+        mockMvc.perform(get("/api/product"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$", hasSize(2)));
+
+        verify(productRepository, times(1)).findAll();
+    }
 }
+
+// Iteration 8: 4 neue Tests für Suche/Filter

@@ -53,3 +53,6 @@ mvn test -Dspring.profiles.active=local , um Tests durchzuführen
 ![alt text](image-2.png)
 
 ### Iteration 7: Added 1:n relation Product - Review
+Benötige keine Reviews
+
+### Iteration 8: Search and filter products

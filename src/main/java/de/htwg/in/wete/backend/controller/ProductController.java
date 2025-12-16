@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import de.htwg.in.wete.backend.model.Category;
 import de.htwg.in.wete.backend.model.Product;
 import de.htwg.in.wete.backend.repository.ProductRepository;
 
@@ -25,7 +26,21 @@ public class ProductController {
     private ProductRepository productRepository;
 
     @GetMapping
-    public List<Product> getProducts() {
+    public List<Product> getProducts(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) Category category) {
+        
+        if (name != null && category != null) {
+            LOG.info("Searching products by name '{}' and category '{}'", name, category);
+            return productRepository.findByTitleContainingIgnoreCaseAndCategory(name, category);
+        } else if (name != null) {
+            LOG.info("Searching products by name '{}'", name);
+            return productRepository.findByTitleContainingIgnoreCase(name);
+        } else if (category != null) {
+            LOG.info("Filtering products by category '{}'", category);
+            return productRepository.findByCategory(category);
+        }
+        
         return productRepository.findAll();
     }
 
@@ -78,3 +93,5 @@ public ResponseEntity<Product> createProduct(@RequestBody Product product) {
         }
     }
 }
+
+// Iteration 8: getProducts() mit name & category Parametern

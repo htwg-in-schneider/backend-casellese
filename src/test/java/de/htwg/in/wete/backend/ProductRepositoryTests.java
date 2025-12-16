@@ -105,4 +105,97 @@ class ProductRepositoryTests {
         assertEquals("Updated Title", updatedProduct.getTitle());
         assertEquals(9.99, updatedProduct.getPrice());
     }
+
+    // ========== Search and Filter Tests ==========
+
+    @Test
+    void testFindByCategory() {
+        Product kaese1 = new Product();
+        kaese1.setTitle("Caciocavallo");
+        kaese1.setCategory(Category.KAESE);
+        kaese1.setPrice(12.99);
+
+        Product kaese2 = new Product();
+        kaese2.setTitle("Mozzarella");
+        kaese2.setCategory(Category.KAESE);
+        kaese2.setPrice(8.99);
+
+        Product salami = new Product();
+        salami.setTitle("Salsiccia");
+        salami.setCategory(Category.SALAMI);
+        salami.setPrice(15.99);
+
+        productRepository.save(kaese1);
+        productRepository.save(kaese2);
+        productRepository.save(salami);
+
+        List<Product> kaeseProducts = productRepository.findByCategory(Category.KAESE);
+
+        assertEquals(2, kaeseProducts.size());
+        assertTrue(kaeseProducts.stream().allMatch(p -> p.getCategory() == Category.KAESE));
+    }
+
+    @Test
+    void testFindByTitleContainingIgnoreCase() {
+        Product product1 = new Product();
+        product1.setTitle("Caciocavallo Silano");
+        product1.setCategory(Category.KAESE);
+        product1.setPrice(12.99);
+
+        Product product2 = new Product();
+        product2.setTitle("Mozzarella di Bufala");
+        product2.setCategory(Category.KAESE);
+        product2.setPrice(8.99);
+
+        productRepository.save(product1);
+        productRepository.save(product2);
+
+        // Test case-insensitive search
+        List<Product> results = productRepository.findByTitleContainingIgnoreCase("cacio");
+        assertEquals(1, results.size());
+        assertEquals("Caciocavallo Silano", results.get(0).getTitle());
+
+        // Test partial match
+        List<Product> mozResults = productRepository.findByTitleContainingIgnoreCase("mozzarella");
+        assertEquals(1, mozResults.size());
+        assertEquals("Mozzarella di Bufala", mozResults.get(0).getTitle());
+    }
+
+    @Test
+    void testFindByTitleContainingIgnoreCaseAndCategory() {
+        Product kaese1 = new Product();
+        kaese1.setTitle("Caciocavallo Silano");
+        kaese1.setCategory(Category.KAESE);
+        kaese1.setPrice(12.99);
+
+        Product kaese2 = new Product();
+        kaese2.setTitle("Pecorino Romano");
+        kaese2.setCategory(Category.KAESE);
+        kaese2.setPrice(18.99);
+
+        Product salami = new Product();
+        salami.setTitle("Salsiccia Calabrese");
+        salami.setCategory(Category.SALAMI);
+        salami.setPrice(15.99);
+
+        productRepository.save(kaese1);
+        productRepository.save(kaese2);
+        productRepository.save(salami);
+
+        // Search for "cacio" in KAESE category
+        List<Product> results = productRepository.findByTitleContainingIgnoreCaseAndCategory("cacio", Category.KAESE);
+        assertEquals(1, results.size());
+        assertEquals("Caciocavallo Silano", results.get(0).getTitle());
+
+        // Search for "Sal" in SALAMI category
+        List<Product> salamiResults = productRepository.findByTitleContainingIgnoreCaseAndCategory("Sal", Category.SALAMI);
+        assertEquals(1, salamiResults.size());
+        assertEquals("Salsiccia Calabrese", salamiResults.get(0).getTitle());
+
+        // Search for non-matching combination
+        List<Product> emptyResults = productRepository.findByTitleContainingIgnoreCaseAndCategory("cacio", Category.SALAMI);
+        assertTrue(emptyResults.isEmpty());
+    }
 }
+
+// Iteration 8: 3 neue Tests für Repository
