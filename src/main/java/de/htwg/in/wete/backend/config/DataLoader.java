@@ -3,25 +3,34 @@ package de.htwg.in.wete.backend.config;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 import de.htwg.in.wete.backend.model.Category;
 import de.htwg.in.wete.backend.model.Product;
 import de.htwg.in.wete.backend.model.Recipe;
+import de.htwg.in.wete.backend.model.User;
+import de.htwg.in.wete.backend.model.Role;
 import de.htwg.in.wete.backend.repository.ProductRepository;
 import de.htwg.in.wete.backend.repository.RecipeRepository;
+import de.htwg.in.wete.backend.repository.UserRepository;
 
 import java.util.Arrays;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Configuration
+@Profile("!test")
 public class DataLoader {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DataLoader.class);
 
     @Bean
-    public CommandLineRunner loadData(ProductRepository repository, RecipeRepository recipeRepository) {
+    public CommandLineRunner loadData(UserRepository userRepository, ProductRepository repository, RecipeRepository recipeRepository) {
         return args -> {
+            loadInitialUsers(userRepository);
+
+            // only load products and recipes if none exist
             if (repository.count() == 0) {
                 LOGGER.info("Database is empty. Loading initial data...");
                 loadInitialData(repository, recipeRepository);
@@ -29,6 +38,43 @@ public class DataLoader {
                 LOGGER.info("Database already contains data. Skipping data loading.");
             }
         };
+    }
+
+    /**
+     * Load initial user data.
+     * 
+     * IMPORTANT: When copying this code, you need to:
+     * 1. Create users in your Auth0 tenant first
+     * 2. Replace the oauthId values with the actual 'sub' claim from Auth0
+     *    Format is typically: "auth0|123456789" for Auth0 users -> auth0|6943dcd996d00876f0d33277
+     */
+    private void loadInitialUsers(UserRepository userRepository) {
+        // Replace these with your actual Auth0 user IDs!
+        // upsertUser(userRepository, "Carmine Savino", "carmine@mysavino.com", "auth0|6943dcd996d00876f0d33277", Role.ADMIN);
+        // upsertUser(userRepository, "Regular User", "admin@example.com", "auth0|REPLACE_WITH_YOUR_ADMIN_ID", Role.REGULAR);
+        // Für Machine-to-Machine Token 
+        upsertUser(userRepository, "API Client", "api@casellese.local", "YA6xaTr1pV4JUBJsDf0SPFlzWjciue1d@clients", Role.ADMIN);
+    }
+    // upsertUser(userRepository, "Dein Name", "deine@email.com", "auth0|DEINE_ECHTE_ID", Role.REGULAR);
+
+    private void upsertUser(UserRepository userRepository, String name, String email, String oauthId, Role role) {
+        Optional<User> existing = userRepository.findByEmail(email);
+        if (existing.isPresent()) {
+            User e = existing.get();
+            e.setName(name);
+            e.setOauthId(oauthId);
+            e.setRole(role);
+            userRepository.save(e);
+            LOGGER.info("Updated existing {} user with email={}", role, email);
+        } else {
+            User u = new User();
+            u.setName(name);
+            u.setEmail(email);
+            u.setOauthId(oauthId);
+            u.setRole(role);
+            userRepository.save(u);
+            LOGGER.info("Created new {} user with email={}", role, email);
+        }
     }
 
     private void loadInitialData(ProductRepository repository, RecipeRepository recipeRepository) {

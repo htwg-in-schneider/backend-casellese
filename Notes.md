@@ -56,3 +56,24 @@ mvn test -Dspring.profiles.active=local , um Tests durchzuführen
 Benötige keine Reviews
 
 ### Iteration 8: Search and filter products
+http://localhost:8081/api/product
+http://localhost:8081/api/product?name=Brot
+http://localhost:8081/api/product?category=SALAMI
+http://localhost:8081/api/product?name=Sal&category=SALAMI
+http://localhost:8081/api/category
+
+(nach ./mvnw spring-boot:run)
+
+### Iteration 9: Added user profile and spring security (OAuth2 with Auth0)
+Lokal testen:
+> .requestMatchers("/api/**").permitAll()) auskommentieren
+> .anyRequest().permitAll())
+> ./mvnw spring-boot:run -> http://localhost:8081/api/product
+
+> Bearer Token unter -> https://manage.auth0.com/dashboard/us/dev-xtay6xv00u4qv7bp/apis/6943dc63e6b6264b90c426f2/test unter -> jwt.io
+
+> curl -H "Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Im5OUDV2WUdoY0hGTVNaUWs4RkY1QiJ9.eyJpc3MiOiJodHRwczovL2Rldi14dGF5Nnh2MDB1NHF2N2JwLnVzLmF1dGgwLmNvbS8iLCJzdWIiOiJZQTZ4YVRyMXBWNEpVQkpzRGYwU1BGbHpXamNpdWUxZEBjbGllbnRzIiwiYXVkIjoiaHR0cHM6Ly9hcGkuY2FzZWxsZXNlLmxvY2FsIiwiaWF0IjoxNzY2MDY4NzI5LCJleHAiOjE3NjYxNTUxMjksImd0eSI6ImNsaWVudC1jcmVkZW50aWFscyIsImF6cCI6IllBNnhhVHIxcFY0SlVCSnNEZjBTUEZseldqY2l1ZTFkIn0.w2Yu7GjF_W-l3GnvLJpTFUt3Kk7ZvS4EA9iw8nn6GAO100OwboE4C95HykR-TC_9KlyQ7DsMTTgX3y1bmlvSujzAmChkvydmvQQhaBkfWJNSrkWolA4oJWJIZDHkO-5nKd9Zw06CznyNlbbpsHHQz2IoP72C1qQpwaTk22mzhOgKYqNCs7YpS9jl0LskTkYtFZEacgc-sWliKLpsNhNv3cN-Psid0eNjNH_j-lH_q4v1q_NcwC6aVoFFDWsupHDdQX-4nEi204QO-rZ5VLPUQJMPoxXY_fmd5p4Txo_jXWM1HjE_rT5r53GeyY8BmjmPkpZcpkf6QNY3q4te7nWQkw" http://localhost:8081/api/profile
+
+> WICHTIG: ![alt text](image-3.png)
+PS: Ist noch auf Machine-to-Machine Token
+

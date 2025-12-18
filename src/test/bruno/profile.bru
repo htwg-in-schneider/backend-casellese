@@ -1,0 +1,20 @@
+meta {
+  name: profile
+  type: http
+  seq: 9
+}
+
+get {
+  url: http://localhost:8081/api/profile
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: aus dem Client kopieren!
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

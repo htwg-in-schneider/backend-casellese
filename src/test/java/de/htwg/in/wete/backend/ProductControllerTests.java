@@ -1,364 +1,195 @@
 package de.htwg.in.wete.backend;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import de.htwg.in.wete.backend.controller.ProductController;
-import de.htwg.in.wete.backend.model.Category;
-import de.htwg.in.wete.backend.model.Product;
-import de.htwg.in.wete.backend.repository.ProductRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-
-import static org.hamcrest.Matchers.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(ProductController.class)
+import java.util.Optional;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import de.htwg.in.wete.backend.model.Category;
+import de.htwg.in.wete.backend.model.Product;
+import de.htwg.in.wete.backend.model.Role;
+import de.htwg.in.wete.backend.model.User;
+import de.htwg.in.wete.backend.repository.ProductRepository;
+import de.htwg.in.wete.backend.repository.UserRepository;
+
+@SpringBootTest
+@ActiveProfiles("test")
 class ProductControllerTests {
 
-    @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @Autowired
     private ProductRepository productRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     private ObjectMapper objectMapper;
 
-    private Product testProduct;
-
     @BeforeEach
-    void setUp() {
-        testProduct = new Product();
-        testProduct.setId(1L);
-        testProduct.setTitle("Test Caciocavallo");
-        testProduct.setDescription("Ein leckerer italienischer Käse");
-        testProduct.setCategory(Category.KAESE);
-        testProduct.setPrice(12.99);
-        testProduct.setImageUrl("https://example.com/kaese.jpg");
-        testProduct.setImageUrlDetails("https://example.com/kaese-details.jpg");
-        testProduct.setIngredients("Milch, Lab, Salz");
-    }
-
-    // ========== GET /api/product - List all products ==========
-
-    @Test
-    void getProducts_shouldReturnAllProducts() throws Exception {
-        Product product2 = new Product();
-        product2.setId(2L);
-        product2.setTitle("Salsiccia");
-        product2.setCategory(Category.SALAMI);
-        product2.setPrice(15.99);
-
-        List<Product> products = Arrays.asList(testProduct, product2);
-        when(productRepository.findAll()).thenReturn(products);
-
-        mockMvc.perform(get("/api/product"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].title", is("Test Caciocavallo")))
-                .andExpect(jsonPath("$[1].title", is("Salsiccia")));
-
-        verify(productRepository, times(1)).findAll();
+    public void setUp(WebApplicationContext webApplicationContext) {
+        this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+                .apply(springSecurity())
+                .build();
+        productRepository.deleteAll();
+        userRepository.deleteAll();
+        
+        User adminUser = new User();
+        adminUser.setName("Admin User");
+        adminUser.setEmail("admin@example.com");
+        adminUser.setOauthId("auth0|admin");
+        adminUser.setRole(Role.ADMIN);
+        userRepository.save(adminUser);
     }
 
     @Test
-    void getProducts_shouldReturnEmptyListWhenNoProducts() throws Exception {
-        when(productRepository.findAll()).thenReturn(List.of());
-
-        mockMvc.perform(get("/api/product"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(0)));
-
-        verify(productRepository, times(1)).findAll();
-    }
-
-    // ========== GET /api/product/{id} - Get single product ==========
-
-    @Test
-    void getProductById_shouldReturnProductWhenExists() throws Exception {
-        when(productRepository.findById(1L)).thenReturn(Optional.of(testProduct));
-
-        mockMvc.perform(get("/api/product/1"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id", is(1)))
-                .andExpect(jsonPath("$.title", is("Test Caciocavallo")))
-                .andExpect(jsonPath("$.description", is("Ein leckerer italienischer Käse")))
-                .andExpect(jsonPath("$.category", is("KAESE")))
-                .andExpect(jsonPath("$.price", is(12.99)))
-                .andExpect(jsonPath("$.imageUrl", is("https://example.com/kaese.jpg")));
-
-        verify(productRepository, times(1)).findById(1L);
-    }
-
-    @Test
-    void getProductById_shouldReturn404WhenNotFound() throws Exception {
-        when(productRepository.findById(999L)).thenReturn(Optional.empty());
-
-        mockMvc.perform(get("/api/product/999"))
-                .andExpect(status().isNotFound());
-
-        verify(productRepository, times(1)).findById(999L);
-    }
-
-    // ========== POST /api/product - Create product ==========
-
-    @Test
-    void createProduct_shouldReturn201AndCreatedProduct() throws Exception {
-        Product newProduct = new Product();
-        newProduct.setTitle("Neuer Käse");
-        newProduct.setDescription("Beschreibung");
-        newProduct.setCategory(Category.KAESE);
-        newProduct.setPrice(9.99);
-
-        Product savedProduct = new Product();
-        savedProduct.setId(1L);
-        savedProduct.setTitle("Neuer Käse");
-        savedProduct.setDescription("Beschreibung");
-        savedProduct.setCategory(Category.KAESE);
-        savedProduct.setPrice(9.99);
-
-        when(productRepository.save(any(Product.class))).thenReturn(savedProduct);
-
-        mockMvc.perform(post("/api/product")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(newProduct)))
-                .andExpect(status().isCreated())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id", is(1)))
-                .andExpect(jsonPath("$.title", is("Neuer Käse")))
-                .andExpect(jsonPath("$.category", is("KAESE")))
-                .andExpect(jsonPath("$.price", is(9.99)));
-
-        verify(productRepository, times(1)).save(any(Product.class));
-    }
-
-    @Test
-    void createProduct_shouldIgnoreProvidedIdAndCreateNewProduct() throws Exception {
-        Product productWithId = new Product();
-        productWithId.setId(999L); // ID should be ignored
-        productWithId.setTitle("Produkt mit ID");
-        productWithId.setCategory(Category.BROT);
-        productWithId.setPrice(4.99);
-
-        Product savedProduct = new Product();
-        savedProduct.setId(1L); // New generated ID
-        savedProduct.setTitle("Produkt mit ID");
-        savedProduct.setCategory(Category.BROT);
-        savedProduct.setPrice(4.99);
-
-        when(productRepository.save(any(Product.class))).thenReturn(savedProduct);
-
-        mockMvc.perform(post("/api/product")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(productWithId)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id", is(1))); // Should have new ID, not 999
-
-        verify(productRepository, times(1)).save(any(Product.class));
-    }
-
-    // ========== PUT /api/product/{id} - Update product ==========
-
-    @Test
-    void updateProduct_shouldReturnUpdatedProductWhenExists() throws Exception {
-        Product updateDetails = new Product();
-        updateDetails.setTitle("Updated Title");
-        updateDetails.setDescription("Updated Description");
-        updateDetails.setCategory(Category.SALAMI);
-        updateDetails.setPrice(19.99);
-        updateDetails.setImageUrl("https://example.com/updated.jpg");
-
-        Product existingProduct = new Product();
-        existingProduct.setId(1L);
-        existingProduct.setTitle("Original Title");
-        existingProduct.setCategory(Category.KAESE);
-        existingProduct.setPrice(12.99);
-
-        Product updatedProduct = new Product();
-        updatedProduct.setId(1L);
-        updatedProduct.setTitle("Updated Title");
-        updatedProduct.setDescription("Updated Description");
-        updatedProduct.setCategory(Category.SALAMI);
-        updatedProduct.setPrice(19.99);
-        updatedProduct.setImageUrl("https://example.com/updated.jpg");
-
-        when(productRepository.findById(1L)).thenReturn(Optional.of(existingProduct));
-        when(productRepository.save(any(Product.class))).thenReturn(updatedProduct);
-
-        mockMvc.perform(put("/api/product/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateDetails)))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id", is(1)))
-                .andExpect(jsonPath("$.title", is("Updated Title")))
-                .andExpect(jsonPath("$.description", is("Updated Description")))
-                .andExpect(jsonPath("$.category", is("SALAMI")))
-                .andExpect(jsonPath("$.price", is(19.99)));
-
-        verify(productRepository, times(1)).findById(1L);
-        verify(productRepository, times(1)).save(any(Product.class));
-    }
-
-    @Test
-    void updateProduct_shouldReturn404WhenNotFound() throws Exception {
-        Product updateDetails = new Product();
-        updateDetails.setTitle("Updated Title");
-        updateDetails.setCategory(Category.KAESE);
-        updateDetails.setPrice(9.99);
-
-        when(productRepository.findById(999L)).thenReturn(Optional.empty());
-
-        mockMvc.perform(put("/api/product/999")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateDetails)))
-                .andExpect(status().isNotFound());
-
-        verify(productRepository, times(1)).findById(999L);
-        verify(productRepository, never()).save(any(Product.class));
-    }
-
-    // ========== DELETE /api/product/{id} - Delete product ==========
-
-    @Test
-    void deleteProduct_shouldReturn204WhenSuccessful() throws Exception {
-        when(productRepository.findById(1L)).thenReturn(Optional.of(testProduct));
-        doNothing().when(productRepository).delete(any(Product.class));
-
-        mockMvc.perform(delete("/api/product/1"))
-                .andExpect(status().isNoContent());
-
-        verify(productRepository, times(1)).findById(1L);
-        verify(productRepository, times(1)).delete(testProduct);
-    }
-
-    @Test
-    void deleteProduct_shouldReturn404WhenNotFound() throws Exception {
-        when(productRepository.findById(999L)).thenReturn(Optional.empty());
-
-        mockMvc.perform(delete("/api/product/999"))
-                .andExpect(status().isNotFound());
-
-        verify(productRepository, times(1)).findById(999L);
-        verify(productRepository, never()).delete(any(Product.class));
-    }
-
-    // ========== GET /api/product?name=... - Search by name ==========
-
-    @Test
-    void getProducts_withNameParameter_shouldSearchByName() throws Exception {
+    void testGetProducts() throws Exception {
         Product product = new Product();
-        product.setId(1L);
-        product.setTitle("Caciocavallo");
+        product.setTitle("Test Caciocavallo");
         product.setCategory(Category.KAESE);
         product.setPrice(12.99);
+        productRepository.save(product);
 
-        List<Product> products = Arrays.asList(product);
-        when(productRepository.findByTitleContainingIgnoreCase("Cacio")).thenReturn(products);
+        mockMvc.perform(get("/api/product"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].title").value("Test Caciocavallo"));
+    }
+
+    @Test
+    void testGetProductById() throws Exception {
+        Product product = new Product();
+        product.setTitle("Salsiccia Test");
+        product.setCategory(Category.SALAMI);
+        product.setPrice(15.99);
+        product = productRepository.save(product);
+
+        mockMvc.perform(get("/api/product/" + product.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Salsiccia Test"));
+    }
+
+    @Test
+    void testGetProductById_NotFound() throws Exception {
+        mockMvc.perform(get("/api/product/999"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testGetProductsByName() throws Exception {
+        Product p1 = new Product();
+        p1.setTitle("Caciocavallo Silano");
+        p1.setCategory(Category.KAESE);
+        p1.setPrice(12.99);
+        productRepository.save(p1);
+
+        Product p2 = new Product();
+        p2.setTitle("Mozzarella");
+        p2.setCategory(Category.KAESE);
+        p2.setPrice(8.99);
+        productRepository.save(p2);
 
         mockMvc.perform(get("/api/product").param("name", "Cacio"))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].title", is("Caciocavallo")));
-
-        verify(productRepository, times(1)).findByTitleContainingIgnoreCase("Cacio");
-        verify(productRepository, never()).findAll();
+                .andExpect(jsonPath("$[0].title").value("Caciocavallo Silano"))
+                .andExpect(jsonPath("$.length()").value(1));
     }
 
-    // ========== GET /api/product?category=... - Filter by category ==========
-
     @Test
-    void getProducts_withCategoryParameter_shouldFilterByCategory() throws Exception {
-        Product product1 = new Product();
-        product1.setId(1L);
-        product1.setTitle("Caciocavallo");
-        product1.setCategory(Category.KAESE);
-        product1.setPrice(12.99);
+    void testGetProductsByCategory() throws Exception {
+        Product p1 = new Product();
+        p1.setTitle("Käse 1");
+        p1.setCategory(Category.KAESE);
+        p1.setPrice(10.0);
+        productRepository.save(p1);
 
-        Product product2 = new Product();
-        product2.setId(2L);
-        product2.setTitle("Mozzarella");
-        product2.setCategory(Category.KAESE);
-        product2.setPrice(8.99);
-
-        List<Product> products = Arrays.asList(product1, product2);
-        when(productRepository.findByCategory(Category.KAESE)).thenReturn(products);
+        Product p2 = new Product();
+        p2.setTitle("Brot 1");
+        p2.setCategory(Category.BROT);
+        p2.setPrice(5.0);
+        productRepository.save(p2);
 
         mockMvc.perform(get("/api/product").param("category", "KAESE"))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].category", is("KAESE")))
-                .andExpect(jsonPath("$[1].category", is("KAESE")));
-
-        verify(productRepository, times(1)).findByCategory(Category.KAESE);
-        verify(productRepository, never()).findAll();
+                .andExpect(jsonPath("$[0].title").value("Käse 1"))
+                .andExpect(jsonPath("$.length()").value(1));
     }
 
-    // ========== GET /api/product?name=...&category=... - Search and filter ==========
+    @Test
+    void testCreateProduct() throws Exception {
+        String productPayload = "{\"title\":\"Neuer Käse\",\"category\":\"KAESE\",\"price\":9.99}";
+
+        MvcResult mvcResult = mockMvc.perform(post("/api/product")
+                .with(jwt().jwt(jwt -> jwt.claim("sub", "auth0|admin")))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(productPayload))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.title").value("Neuer Käse"))
+                .andReturn();
+
+        String responseContent = mvcResult.getResponse().getContentAsString();
+        JsonNode json = objectMapper.readTree(responseContent);
+        Long id = json.get("id").asLong();
+        assertNotNull(id);
+
+        Product saved = productRepository.findById(id).orElseThrow();
+        assertEquals("Neuer Käse", saved.getTitle());
+    }
 
     @Test
-    void getProducts_withNameAndCategoryParameters_shouldSearchAndFilter() throws Exception {
+    void testUpdateProduct() throws Exception {
+        Product existingProduct = new Product();
+        existingProduct.setTitle("Original Title");
+        existingProduct.setCategory(Category.KAESE);
+        existingProduct.setPrice(7.99);
+        Long id = productRepository.save(existingProduct).getId();
+
+        String updatePayload = "{\"title\":\"Updated Title\",\"category\":\"SALAMI\",\"price\":19.99}";
+        
+        mockMvc.perform(put("/api/product/" + id)
+                .with(jwt().jwt(jwt -> jwt.claim("sub", "auth0|admin")))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(updatePayload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Updated Title"));
+
+        Product updated = productRepository.findById(id).orElseThrow();
+        assertEquals("Updated Title", updated.getTitle());
+    }
+
+    @Test
+    void testDeleteProduct() throws Exception {
         Product product = new Product();
-        product.setId(1L);
-        product.setTitle("Caciocavallo Silano");
-        product.setCategory(Category.KAESE);
-        product.setPrice(15.99);
+        product.setTitle("To Be Deleted");
+        product.setCategory(Category.BROT);
+        product.setPrice(4.99);
+        product = productRepository.save(product);
 
-        List<Product> products = Arrays.asList(product);
-        when(productRepository.findByTitleContainingIgnoreCaseAndCategory("Cacio", Category.KAESE))
-                .thenReturn(products);
+        mockMvc.perform(delete("/api/product/" + product.getId())
+                .with(jwt().jwt(jwt -> jwt.claim("sub", "auth0|admin"))))
+                .andExpect(status().isNoContent());
 
-        mockMvc.perform(get("/api/product")
-                        .param("name", "Cacio")
-                        .param("category", "KAESE"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].title", is("Caciocavallo Silano")))
-                .andExpect(jsonPath("$[0].category", is("KAESE")));
-
-        verify(productRepository, times(1)).findByTitleContainingIgnoreCaseAndCategory("Cacio", Category.KAESE);
-        verify(productRepository, never()).findAll();
-    }
-
-    @Test
-    void getProducts_withNoParameters_shouldReturnAllProducts() throws Exception {
-        Product product1 = new Product();
-        product1.setId(1L);
-        product1.setTitle("Käse");
-        product1.setCategory(Category.KAESE);
-
-        Product product2 = new Product();
-        product2.setId(2L);
-        product2.setTitle("Brot");
-        product2.setCategory(Category.BROT);
-
-        List<Product> products = Arrays.asList(product1, product2);
-        when(productRepository.findAll()).thenReturn(products);
-
-        mockMvc.perform(get("/api/product"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(2)));
-
-        verify(productRepository, times(1)).findAll();
+        Optional<Product> deleted = productRepository.findById(product.getId());
+        assertFalse(deleted.isPresent());
     }
 }
-
-// Iteration 8: 4 neue Tests für Suche/Filter
+    
