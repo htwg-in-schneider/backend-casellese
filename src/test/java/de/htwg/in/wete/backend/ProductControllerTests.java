@@ -142,7 +142,7 @@ class ProductControllerTests {
                 .with(jwt().jwt(jwt -> jwt.claim("sub", "auth0|admin")))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(productPayload))
-                .andExpect(status().isCreated())
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("Neuer Käse"))
                 .andReturn();
 

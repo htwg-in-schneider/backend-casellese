@@ -1,5 +1,6 @@
 package de.htwg.in.wete.backend.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,6 +14,7 @@ import de.htwg.in.wete.backend.model.Role;
 import de.htwg.in.wete.backend.repository.ProductRepository;
 import de.htwg.in.wete.backend.repository.RecipeRepository;
 import de.htwg.in.wete.backend.repository.UserRepository;
+import jakarta.annotation.PostConstruct;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -23,6 +25,26 @@ import org.slf4j.LoggerFactory;
 @Profile("!test")
 public class DataLoader {
 
+    // Admin User Repository für PostConstruct
+    @Autowired
+    private UserRepository userRepository;
+
+    @PostConstruct
+    public void init() {
+    // ... bestehender Code für Produkte ...
+    
+    // Admin-User anlegen (falls noch nicht vorhanden)
+    if (userRepository.findByOauthId("auth0|DEINE_AUTH0_USER_ID").isEmpty()) {
+        User admin = new User();
+        admin.setName("Carmine Savino"); // Admin Name
+        admin.setEmail("Carmine@mysavino.com");
+        admin.setOauthId("google-oauth2|101893517382862224753");  // <- Aus Auth0 Dashboard
+        admin.setRole(Role.ADMIN);
+        userRepository.save(admin);
+     }
+    }
+
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(DataLoader.class);
 
     @Bean
@@ -39,6 +61,7 @@ public class DataLoader {
             }
         };
     }
+
 
     /**
      * Load initial user data.

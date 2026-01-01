@@ -1,6 +1,6 @@
 package de.htwg.in.wete.backend;
 
-import de.htwg.in.wete.backend.controller.CategoryController;
+// import de.htwg.in.wete.backend.controller.CategoryController;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;

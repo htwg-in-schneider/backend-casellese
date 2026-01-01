@@ -3,11 +3,16 @@ package de.htwg.in.wete.backend.controller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import de.htwg.in.wete.backend.model.Category;
 import de.htwg.in.wete.backend.model.Product;
+import de.htwg.in.wete.backend.model.Role;
+import de.htwg.in.wete.backend.model.User;
 import de.htwg.in.wete.backend.repository.ProductRepository;
+import de.htwg.in.wete.backend.repository.UserRepository;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +28,29 @@ public class ProductController {
     private static final Logger LOG = LoggerFactory.getLogger(ProductController.class);
 
     @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
     private ProductRepository productRepository;
+
+    /**
+     * Checks if the user identified by the JWT has ADMIN role.
+     * @param jwt The JWT token from the authenticated user
+     * @return true if the user exists and has ADMIN role, false otherwise
+     */
+    private boolean userFromJwtIsAdmin(Jwt jwt) {
+        if (jwt == null || jwt.getSubject() == null) {
+            LOG.warn("JWT or subject is null");
+            return false;
+        }
+        Optional<User> user = userRepository.findByOauthId(jwt.getSubject());
+        if (!user.isPresent() || user.get().getRole() != Role.ADMIN) {
+            LOG.warn("Unauthorized access by " + user.map(u -> "user with oauthId " + u.getOauthId())
+                    .orElse("unknown user"));
+            return false;
+        }
+        return true;
+    }
 
     @GetMapping
     public List<Product> getProducts(
@@ -45,18 +72,27 @@ public class ProductController {
     }
 
     @PostMapping
-public ResponseEntity<Product> createProduct(@RequestBody Product product) {
-    if (product.getId() != null) {
-        product.setId(null);
-        LOG.warn("Attempted to create a product with an existing ID. ID has been set to null to create a new product.");
+    public ResponseEntity<Product> createProduct(@AuthenticationPrincipal Jwt jwt, @RequestBody Product product) {
+        if (!userFromJwtIsAdmin(jwt)) {
+            return ResponseEntity.status(403).build();
+        }
+
+        if (product.getId() != null) {
+            product.setId(null);
+            LOG.warn("Attempted to create a product with an existing ID. ID has been set to null to create a new product.");
+        }
+        Product newProduct = productRepository.save(product);
+        LOG.info("Created new product with id " + newProduct.getId());
+        return ResponseEntity.ok(newProduct);
     }
-    Product newProduct = productRepository.save(product);
-    LOG.info("Created new product with id " + newProduct.getId());
-    return ResponseEntity.status(HttpStatus.CREATED).body(newProduct);
-}
 
     @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody Product productDetails) {
+    public ResponseEntity<Product> updateProduct(@AuthenticationPrincipal Jwt jwt, 
+            @PathVariable Long id, @RequestBody Product productDetails) {
+        if (!userFromJwtIsAdmin(jwt)) {
+            return ResponseEntity.status(403).build();
+        }
+
         Optional<Product> opt = productRepository.findById(id);
         if (!opt.isPresent()) {
             return ResponseEntity.notFound().build();
@@ -73,7 +109,11 @@ public ResponseEntity<Product> createProduct(@RequestBody Product product) {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Object> deleteProduct(@PathVariable Long id) {
+    public ResponseEntity<Object> deleteProduct(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id) {
+        if (!userFromJwtIsAdmin(jwt)) {
+            return ResponseEntity.status(403).build();
+        }
+
         Optional<Product> opt = productRepository.findById(id);
         if (!opt.isPresent()) {
             return ResponseEntity.notFound().build();
@@ -94,4 +134,4 @@ public ResponseEntity<Product> createProduct(@RequestBody Product product) {
     }
 }
 
-// Iteration 8: getProducts() mit name & category Parametern
+// Iteration 10: Requiring admin privileges for product creation, update and deletion
