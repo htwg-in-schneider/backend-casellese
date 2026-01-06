@@ -8,6 +8,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 
+import de.htwg.in.wete.backend.model.Role;
 import de.htwg.in.wete.backend.model.User;
 import de.htwg.in.wete.backend.repository.UserRepository;
 
@@ -30,8 +31,21 @@ public class ProfileController {
             LOGGER.warn("JWT does not contain 'sub' claim");
             return ResponseEntity.badRequest().build();
         }
-        return userRepository.findByOauthId(oauthId)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        
+        // Suche nach existierendem User oder erstelle neuen User mit REGULAR-Rolle
+        User user = userRepository.findByOauthId(oauthId)
+                .orElseGet(() -> {
+                    LOGGER.info("Creating new user with oauthId: {}", oauthId);
+                    User newUser = new User();
+                    newUser.setOauthId(oauthId);
+                    // Name und Email aus JWT-Claims extrahieren
+                    newUser.setName(jwt.getClaimAsString("name"));
+                    newUser.setEmail(jwt.getClaimAsString("email"));
+                    // Neue User bekommen standardmäßig die REGULAR-Rolle
+                    newUser.setRole(Role.REGULAR);
+                    return userRepository.save(newUser);
+                });
+        
+        return ResponseEntity.ok(user);
     }
 }
