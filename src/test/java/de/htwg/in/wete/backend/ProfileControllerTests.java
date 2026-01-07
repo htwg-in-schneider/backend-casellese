@@ -55,14 +55,21 @@ public class ProfileControllerTests {
     }
 
     @Test
-    public void testGetProfileNotFound() throws Exception {
+    public void testGetProfileCreatesNewUser() throws Exception {
         // GIVEN: No user with oauthId "auth0|unknown" exists
 
         // WHEN: The profile is requested with a JWT for an unknown user
         mockMvc.perform(get("/api/profile")
-                .with(jwt().jwt(jwt -> jwt.claim("sub", "auth0|unknown"))))
-                // THEN: Status is Not Found
-                .andExpect(status().isNotFound());
+                .with(jwt().jwt(jwt -> jwt
+                        .claim("sub", "auth0|unknown")
+                        .claim("name", "New User")
+                        .claim("email", "new@example.com"))))
+                // THEN: Status is OK and a new user is created with REGULAR role
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.oauthId").value("auth0|unknown"))
+                .andExpect(jsonPath("$.name").value("New User"))
+                .andExpect(jsonPath("$.email").value("new@example.com"))
+                .andExpect(jsonPath("$.role").value("REGULAR"));
     }
 
     @Test
