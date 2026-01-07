@@ -61,3 +61,21 @@ mockMvc.perform(post("/api/product")
 - GET-Requests bleiben öffentlich (kein Token nötig)
 - Ohne Admin-Rolle → **403 Forbidden**
 - Ohne Token → **401 Unauthorized**
+
+
+
+
+
+### DB Switchen
+
+# 1. In application.properties:
+spring.profiles.active=local, test, prod
+
+# 2. In application-dev.properties einmalig:
+spring.jpa.hibernate.ddl-auto=create (für TEST-DB oder PROD-DB)
+
+# 3. Starten:
+./mvnw spring-boot:run
+
+# 4. Nach erfolgreichem Start in application-dev.properties zurück:
+spring.jpa.hibernate.ddl-auto=update (sonst werden Daten immer gelöscht bei spring boot run)
