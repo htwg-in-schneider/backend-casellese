@@ -26,6 +26,8 @@ public class Recipe {
 
     private String pdfUrl;
 
+    private String youtubeUrl;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id")
     @JsonIgnore
@@ -39,6 +41,13 @@ public class Recipe {
         this.title = title;
         this.text = text;
         this.pdfUrl = pdfUrl;
+    }
+
+    public Recipe(String title, String text, String pdfUrl, String youtubeUrl) {
+        this.title = title;
+        this.text = text;
+        this.pdfUrl = pdfUrl;
+        this.youtubeUrl = youtubeUrl;
     }
 
     // Getters and setters
@@ -74,6 +83,14 @@ public class Recipe {
         this.pdfUrl = pdfUrl;
     }
 
+    public String getYoutubeUrl() {
+        return youtubeUrl;
+    }
+
+    public void setYoutubeUrl(String youtubeUrl) {
+        this.youtubeUrl = youtubeUrl;
+    }
+
     public Product getProduct() {
         return product;
     }
@@ -102,6 +119,7 @@ public class Recipe {
                 ", title='" + title + '\'' +
                 ", text='" + (text != null ? text.substring(0, Math.min(50, text.length())) + "..." : "null") + '\'' +
                 ", pdfUrl='" + pdfUrl + '\'' +
+                ", youtubeUrl='" + youtubeUrl + '\'' +
                 '}';
     }
 }

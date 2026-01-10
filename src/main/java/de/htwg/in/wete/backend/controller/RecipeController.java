@@ -112,6 +112,7 @@ public class RecipeController {
                     recipe.setTitle(recipeDetails.getTitle());
                     recipe.setText(recipeDetails.getText());
                     recipe.setPdfUrl(recipeDetails.getPdfUrl());
+                    recipe.setYoutubeUrl(recipeDetails.getYoutubeUrl());
                     Recipe updatedRecipe = recipeRepository.save(recipe);
                     LOG.info("Updated recipe with id " + updatedRecipe.getId());
                     return ResponseEntity.ok(updatedRecipe);
