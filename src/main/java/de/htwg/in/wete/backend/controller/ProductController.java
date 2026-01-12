@@ -105,7 +105,7 @@ public class ProductController {
         product.setImageUrl(productDetails.getImageUrl());
         product.setImageUrlDetails(productDetails.getImageUrlDetails());
         product.setIngredients(productDetails.getIngredients());
-        product.setPrice(productDetails.getPrice());
+        //product.setPrice(productDetails.getPrice());
         product.setTitle(productDetails.getTitle());
         Product updatedProduct = productRepository.save(product);
         LOG.info("Updated product with id " + updatedProduct.getId());

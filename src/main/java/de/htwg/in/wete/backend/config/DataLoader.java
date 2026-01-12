@@ -39,7 +39,8 @@ public class DataLoader {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataLoader.class);
 
     @Bean
-    public CommandLineRunner loadData(UserRepository userRepository, ProductRepository repository, RecipeRepository recipeRepository) {
+    public CommandLineRunner loadData(UserRepository userRepository, ProductRepository repository,
+            RecipeRepository recipeRepository) {
         return args -> {
             loadInitialUsers(userRepository);
 
@@ -67,27 +68,27 @@ public class DataLoader {
         // ============================================================
         // HIER DEINE EIGENEN AUTH0-BENUTZER EINTRAGEN!
         // ============================================================
-        
+
         // Beispiel für Admin-User mit Google Login:
-        upsertUser(userRepository, 
-            "Carmine Savino",                           // Name
-            "carmine@mysavino.com",                     // Email
-            "google-oauth2|101893517382862224753",      // oauthId (aus Auth0)
-            Role.ADMIN);
-        
+        upsertUser(userRepository,
+                "Carmine Savino", // Name
+                "carmine@mysavino.com", // Email
+                "google-oauth2|101893517382862224753", // oauthId (aus Auth0)
+                Role.ADMIN);
+
         // Beispiel für regulären User (auskommentiert):
-        // upsertUser(userRepository, 
-        //     "Dein Name",                              // Name
-        //     "deine@email.com",                        // Email
-        //     "auth0|DEINE_AUTH0_USER_ID",              // oauthId
-        //     Role.REGULAR);
-        
+         upsertUser(userRepository,
+         "Carmine Savino", // Name
+         "csavino16@email.com", // Email
+         "auth0|695e385cd58fa9152ab1b808", // oauthId
+         Role.REGULAR);
+
         // Für Machine-to-Machine (M2M) API-Zugriff:
-        upsertUser(userRepository, 
-            "API Client", 
-            "api@casellese.local", 
-            "YA6xaTr1pV4JUBJsDf0SPFlzWjciue1d@clients", 
-            Role.ADMIN);
+         upsertUser(userRepository,
+         "API Client",
+         "api@casellese.local",
+         "YA6xaTr1pV4JUBJsDf0SPFlzWjciue1d@clients",
+         Role.ADMIN);
     }
 
     /**
@@ -120,9 +121,10 @@ public class DataLoader {
         // Produkt 1: Caciocavallo (Käse)
         Product caciocavallo = new Product();
         caciocavallo.setTitle("Caciocavallo");
-        caciocavallo.setDescription("Caciocavallo ist ein italienischer Kult-Käse mit unverwechselbarer birnenförmiger Gestalt, der traditionell paarweise an der Schnur hängt");
+        caciocavallo.setDescription(
+                "Caciocavallo ist ein italienischer Kult-Käse mit unverwechselbarer birnenförmiger Gestalt, der traditionell paarweise an der Schnur hängt");
         caciocavallo.setCategory(Category.KAESE);
-        caciocavallo.setPrice(7.99);
+        //caciocavallo.setPrice(7.99);
         caciocavallo.setImageUrl("http://nucccio.github.io/casellese-images/caciocavallo.webp");
         caciocavallo.setImageUrlDetails("http://nucccio.github.io/casellese-images/caciocavallo-rezepte.webp");
         caciocavallo.setIngredients("Kuhmilch, Lab, Salz, Konservierungsstoff: Natriumbenzoat (E211)");
@@ -130,9 +132,10 @@ public class DataLoader {
         // Produkt 2: Salsiccia (Salami)
         Product salsiccia = new Product();
         salsiccia.setTitle("Salsiccia");
-        salsiccia.setDescription("Salsiccia ist eine traditionelle italienische Wurst aus fein gewürztem Schweinefleisch, oft mit Knoblauch, Fenchel oder Chili verfeinert.");
+        salsiccia.setDescription(
+                "Salsiccia ist eine traditionelle italienische Wurst aus fein gewürztem Schweinefleisch, oft mit Knoblauch, Fenchel oder Chili verfeinert.");
         salsiccia.setCategory(Category.SALAMI);
-        salsiccia.setPrice(15.99);
+        //salsiccia.setPrice(15.99);
         salsiccia.setImageUrl("http://nucccio.github.io/casellese-images/salsiccia.webp");
         salsiccia.setImageUrlDetails("http://nucccio.github.io/casellese-images/salsiccia-rezepte.webp");
         salsiccia.setIngredients("Schweinefleisch, Salz, Knoblauch, Fenchelsamen, Paprika, schwarzer Pfeffer");
@@ -140,9 +143,10 @@ public class DataLoader {
         // Produkt 3: Brot
         Product brot = new Product();
         brot.setTitle("Brot");
-        brot.setDescription("Brot ist das zeitlose Grundnahrungsmittel, frisch gebacken mit knuspriger Kruste und weichem Inneren.");
+        brot.setDescription(
+                "Brot ist das zeitlose Grundnahrungsmittel, frisch gebacken mit knuspriger Kruste und weichem Inneren.");
         brot.setCategory(Category.BROT);
-        brot.setPrice(4.99);
+        //brot.setPrice(4.99);
         brot.setImageUrl("http://nucccio.github.io/casellese-images/brot.webp");
         brot.setImageUrlDetails("http://nucccio.github.io/casellese-images/brot-rezepte.webp");
         brot.setIngredients("Weizenmehl, Wasser, Hefe, Salz, Olivenöl");
@@ -153,67 +157,67 @@ public class DataLoader {
         Recipe caciocavalloRezept = new Recipe();
         caciocavalloRezept.setTitle("Überbackene Caciocavallo-Scheiben");
         caciocavalloRezept.setText("""
-## Zutaten
-- 200g Caciocavallo
-- 2 EL Olivenöl
-- Frischer Oregano
-- 1 Knoblauchzehe
+                ## Zutaten
+                - 200g Caciocavallo
+                - 2 EL Olivenöl
+                - Frischer Oregano
+                - 1 Knoblauchzehe
 
-## Zubereitung
-1. Käse in ca. 1cm dicke Scheiben schneiden
-2. Olivenöl in einer Pfanne erhitzen
-3. Käsescheiben von beiden Seiten goldbraun braten (ca. 2 Min. pro Seite)
-4. Mit gehacktem Knoblauch und Oregano bestreuen
-5. Sofort servieren, solange der Käse noch warm und cremig ist
+                ## Zubereitung
+                1. Käse in ca. 1cm dicke Scheiben schneiden
+                2. Olivenöl in einer Pfanne erhitzen
+                3. Käsescheiben von beiden Seiten goldbraun braten (ca. 2 Min. pro Seite)
+                4. Mit gehacktem Knoblauch und Oregano bestreuen
+                5. Sofort servieren, solange der Käse noch warm und cremig ist
 
-## Tipp
-Dazu passt frisches Brot und ein Glas Rotwein!
-            """);
+                ## Tipp
+                Dazu passt frisches Brot und ein Glas Rotwein!
+                            """);
         caciocavalloRezept.setProduct(caciocavallo);
 
         // Rezept für Salsiccia
         Recipe salsicciRezept = new Recipe();
         salsicciRezept.setTitle("Pasta mit Salsiccia");
         salsicciRezept.setText("""
-## Zutaten
-- 400g Pasta (Rigatoni oder Penne)
-- 300g Salsiccia
-- 400g passierte Tomaten
-- 1 Zwiebel
-- 2 Knoblauchzehen
-- Frischer Basilikum
-- Parmesan
+                ## Zutaten
+                - 400g Pasta (Rigatoni oder Penne)
+                - 300g Salsiccia
+                - 400g passierte Tomaten
+                - 1 Zwiebel
+                - 2 Knoblauchzehen
+                - Frischer Basilikum
+                - Parmesan
 
-## Zubereitung
-1. Salsiccia aus der Haut drücken und in kleine Stücke zerteilen
-2. Zwiebel und Knoblauch fein hacken
-3. In Olivenöl die Salsiccia anbraten bis sie goldbraun ist
-4. Zwiebel und Knoblauch hinzufügen und glasig dünsten
-5. Passierte Tomaten hinzufügen und 15 Min. köcheln lassen
-6. Pasta al dente kochen und mit der Sauce vermischen
-7. Mit Parmesan und frischem Basilikum servieren
-            """);
+                ## Zubereitung
+                1. Salsiccia aus der Haut drücken und in kleine Stücke zerteilen
+                2. Zwiebel und Knoblauch fein hacken
+                3. In Olivenöl die Salsiccia anbraten bis sie goldbraun ist
+                4. Zwiebel und Knoblauch hinzufügen und glasig dünsten
+                5. Passierte Tomaten hinzufügen und 15 Min. köcheln lassen
+                6. Pasta al dente kochen und mit der Sauce vermischen
+                7. Mit Parmesan und frischem Basilikum servieren
+                            """);
         salsicciRezept.setProduct(salsiccia);
 
         // Rezept für Brot
         Recipe brotRezept = new Recipe();
         brotRezept.setTitle("Bruschetta Classica");
         brotRezept.setText("""
-## Zutaten
-- 4 Scheiben Brot
-- 4 reife Tomaten
-- 2 Knoblauchzehen
-- Frischer Basilikum
-- Olivenöl extra vergine
-- Salz und Pfeffer
+                ## Zutaten
+                - 4 Scheiben Brot
+                - 4 reife Tomaten
+                - 2 Knoblauchzehen
+                - Frischer Basilikum
+                - Olivenöl extra vergine
+                - Salz und Pfeffer
 
-## Zubereitung
-1. Brotscheiben im Ofen oder auf dem Grill rösten
-2. Tomaten würfeln und mit gehacktem Basilikum, Salz und Olivenöl mischen
-3. Geröstetes Brot mit einer halbierten Knoblauchzehe einreiben
-4. Tomatenmischung großzügig auf das Brot geben
-5. Mit einem Schuss Olivenöl beträufeln und sofort servieren
-            """);
+                ## Zubereitung
+                1. Brotscheiben im Ofen oder auf dem Grill rösten
+                2. Tomaten würfeln und mit gehacktem Basilikum, Salz und Olivenöl mischen
+                3. Geröstetes Brot mit einer halbierten Knoblauchzehe einreiben
+                4. Tomatenmischung großzügig auf das Brot geben
+                5. Mit einem Schuss Olivenöl beträufeln und sofort servieren
+                            """);
         brotRezept.setProduct(brot);
 
         recipeRepository.saveAll(Arrays.asList(caciocavalloRezept, salsicciRezept, brotRezept));

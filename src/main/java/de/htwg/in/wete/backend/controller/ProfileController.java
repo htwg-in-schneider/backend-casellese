@@ -34,21 +34,43 @@ public class ProfileController {
             return ResponseEntity.badRequest().build();
         }
         
-        // Suche nach existierendem User oder erstelle neuen User mit REGULAR-Rolle
+        // Suche nach existierendem User:
+        // 1. Zuerst per oauthId (primärer Identifier)
+        // 2. Falls nicht gefunden, per Email (für vom DataLoader erstellte User)
+        // 3. Falls immer noch nicht gefunden, erstelle neuen User
+        String emailFromJwt = jwt.getClaimAsString("email");
+        
         User user = userRepository.findByOauthId(oauthId)
                 .orElseGet(() -> {
-                    LOGGER.info("Creating new user with oauthId: {}", oauthId);
-                    User newUser = new User();
-                    newUser.setOauthId(oauthId);
-                    // Name und Email aus JWT-Claims extrahieren
-                    newUser.setName(jwt.getClaimAsString("name"));
-                    newUser.setEmail(jwt.getClaimAsString("email"));
-                    // Neue User bekommen standardmäßig die REGULAR-Rolle
-                    newUser.setRole(Role.REGULAR);
-                    return userRepository.save(newUser);
+                    // Versuche per Email zu finden (wichtig für DataLoader-User!)
+                    if (emailFromJwt != null) {
+                        return userRepository.findByEmail(emailFromJwt)
+                                .map(existingUser -> {
+                                    // User per Email gefunden - aktualisiere oauthId
+                                    LOGGER.info("Found existing user by email={}, updating oauthId from {} to {}", 
+                                            emailFromJwt, existingUser.getOauthId(), oauthId);
+                                    existingUser.setOauthId(oauthId);
+                                    return userRepository.save(existingUser);
+                                })
+                                .orElseGet(() -> createNewUser(oauthId, jwt));
+                    }
+                    return createNewUser(oauthId, jwt);
                 });
         
         return ResponseEntity.ok(user);
+    }
+
+    /**
+     * Erstellt einen neuen User mit REGULAR-Rolle.
+     */
+    private User createNewUser(String oauthId, Jwt jwt) {
+        LOGGER.info("Creating new user with oauthId: {}", oauthId);
+        User newUser = new User();
+        newUser.setOauthId(oauthId);
+        newUser.setName(jwt.getClaimAsString("name"));
+        newUser.setEmail(jwt.getClaimAsString("email"));
+        newUser.setRole(Role.REGULAR);
+        return userRepository.save(newUser);
     }
 
     /**
