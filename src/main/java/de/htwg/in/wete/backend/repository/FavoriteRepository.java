@@ -40,4 +40,21 @@ public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
     // Anzahl der Favoriten eines Users
     @Query("SELECT COUNT(f) FROM Favorite f WHERE f.user.oauthId = :oauthId")
     long countByUserOauthId(@Param("oauthId") String oauthId);
+    
+    // ========================================
+    // NEU: Admin-Methoden für Transaktionseinsicht
+    // ========================================
+    
+    /**
+     * Alle Favoriten aller User abrufen (für Admin-Ansicht)
+     * Sortiert nach Erstellungsdatum (neueste zuerst)
+     */
+    @Query("SELECT f FROM Favorite f ORDER BY f.createdAt DESC")
+    List<Favorite> findAllByOrderByCreatedAtDesc();
+    
+    /**
+     * Alle Favoriten eines bestimmten Users (für Admin)
+     */
+    @Query("SELECT f FROM Favorite f WHERE f.user.id = :userId ORDER BY f.createdAt DESC")
+    List<Favorite> findByUserIdOrderByCreatedAtDesc(@Param("userId") Long userId);
 }

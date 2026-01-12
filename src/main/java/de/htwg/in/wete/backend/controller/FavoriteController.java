@@ -39,6 +39,110 @@ public class FavoriteController {
     @Autowired
     private RecipeRepository recipeRepository;
 
+    // ========================================
+    // ADMIN-METHODEN (NEU HINZUGEFÜGT)
+    // ========================================
+
+    /**
+     * Prüft ob der eingeloggte User ein Admin ist.
+     */
+    private boolean isAdmin(Jwt jwt) {
+        String oauthId = jwt.getSubject();
+        Optional<User> userOpt = userRepository.findByOauthId(oauthId);
+        return userOpt.map(user -> user.getRole() == Role.ADMIN).orElse(false);
+    }
+
+    /**
+     * ADMIN: Alle Favoriten aller User abrufen (Transaktionsdaten einsehen)
+     * Erfüllt Anforderung c) "Administratoren können die Transaktionsdaten einsehen"
+     */
+    @GetMapping("/admin/all")
+    public ResponseEntity<List<AdminFavoriteDTO>> getAllFavoritesAdmin(@AuthenticationPrincipal Jwt jwt) {
+        LOGGER.info("getAllFavoritesAdmin called by: {}", jwt.getSubject());
+        
+        if (!isAdmin(jwt)) {
+            LOGGER.warn("Access denied - user is not admin");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        
+        List<Favorite> favorites = favoriteRepository.findAllByOrderByCreatedAtDesc();
+        
+        List<AdminFavoriteDTO> favoriteDTOs = favorites.stream()
+            .map(this::toAdminDTO)
+            .collect(Collectors.toList());
+        
+        LOGGER.info("Returning {} favorites for admin", favoriteDTOs.size());
+        return ResponseEntity.ok(favoriteDTOs);
+    }
+
+    /**
+     * ADMIN: Statistiken über Favoriten abrufen
+     */
+    @GetMapping("/admin/stats")
+    public ResponseEntity<Map<String, Object>> getFavoriteStatsAdmin(@AuthenticationPrincipal Jwt jwt) {
+        LOGGER.info("getFavoriteStatsAdmin called by: {}", jwt.getSubject());
+        
+        if (!isAdmin(jwt)) {
+            LOGGER.warn("Access denied - user is not admin");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        
+        long totalFavorites = favoriteRepository.count();
+        long totalUsers = userRepository.count();
+        
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("totalFavorites", totalFavorites);
+        stats.put("totalUsers", totalUsers);
+        stats.put("averageFavoritesPerUser", totalUsers > 0 ? (double) totalFavorites / totalUsers : 0);
+        
+        return ResponseEntity.ok(stats);
+    }
+
+    /**
+     * DTO für Admin-Ansicht mit User-Informationen
+     */
+    private AdminFavoriteDTO toAdminDTO(Favorite favorite) {
+        AdminFavoriteDTO dto = new AdminFavoriteDTO();
+        dto.id = favorite.getId();
+        dto.recipeId = favorite.getRecipe().getId();
+        dto.recipeTitle = favorite.getRecipe().getTitle();
+        dto.createdAt = favorite.getCreatedAt().toString();
+        
+        // User Info für Admin
+        if (favorite.getUser() != null) {
+            dto.userId = favorite.getUser().getId();
+            dto.userName = favorite.getUser().getName();
+            dto.userEmail = favorite.getUser().getEmail();
+        }
+        
+        // Product Info falls vorhanden
+        if (favorite.getRecipe().getProduct() != null) {
+            dto.productId = favorite.getRecipe().getProduct().getId();
+            dto.productTitle = favorite.getRecipe().getProduct().getTitle();
+        }
+        
+        return dto;
+    }
+
+    /**
+     * DTO Klasse für Admin-Ansicht (enthält User-Daten)
+     */
+    public static class AdminFavoriteDTO {
+        public Long id;
+        public Long userId;
+        public String userName;
+        public String userEmail;
+        public Long recipeId;
+        public String recipeTitle;
+        public Long productId;
+        public String productTitle;
+        public String createdAt;
+    }
+
+    // ========================================
+    // BESTEHENDE USER-METHODEN (UNVERÄNDERT)
+    // ========================================
+
     /**
      * Alle Favoriten des eingeloggten Users abrufen
      */
