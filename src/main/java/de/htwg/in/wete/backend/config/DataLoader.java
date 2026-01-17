@@ -89,6 +89,20 @@ public class DataLoader {
          "api@casellese.local",
          "YA6xaTr1pV4JUBJsDf0SPFlzWjciue1d@clients",
          Role.ADMIN);
+
+         upsertUser(userRepository,
+         "user@mail.com", // Name
+         "user@mail.com", // Email
+         "auth0|696b7556e53903a1d943b8c3", // oauthId
+         Role.REGULAR);
+
+         upsertUser(userRepository,
+                "admin@mail.com", // Name
+                "admin@mail.com", // Email
+                "auth0|696b74b77dd79e93db9dca95", // oauthId (aus Auth0)
+                Role.ADMIN);
+
+
     }
 
     /**

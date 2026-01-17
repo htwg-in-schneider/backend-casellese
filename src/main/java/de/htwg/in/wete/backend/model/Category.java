@@ -15,5 +15,3 @@ public enum Category {
         return germanName;
     }
 }
-
-// Iteration 8: Enum mit deutschen Übersetzungen 
